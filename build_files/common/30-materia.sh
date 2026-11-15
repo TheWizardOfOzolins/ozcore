@@ -23,8 +23,9 @@ curl -fsSL -O "${MATERIA_URL}/SHA256SUMS"
 curl -fsSL -O "${MATERIA_URL}/SHA256SUMS.cosign.bundle"
 
 # The release signs SHA256SUMS with the maintainer's key (build_files/keys/materia.pub);
-# checking the tarball against the verified sums means no per-version checksums live in this repo
-/ctx/tools/cosign verify-blob \
+# checking the tarball against the verified sums means no per-version checksums live in this repo.
+# /root is a dangling symlink to /var/roothome at build time, so keep cosign's TUF cache in the workdir
+HOME="$WORKDIR" TUF_ROOT="$WORKDIR/.sigstore" /ctx/tools/cosign verify-blob \
   --key /ctx/keys/materia.pub \
   --bundle SHA256SUMS.cosign.bundle \
   SHA256SUMS
