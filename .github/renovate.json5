@@ -20,7 +20,8 @@
     {
       // The github-actions manager skips expressions like `runs-on: ${{ arm64 && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}`
       "customType": "regex",
-      "managerFilePatterns": ["/^\\.github/workflows/.+\\.ya?ml$/"],
+      // build-disk.yml is held on 24.04 (see the comment there), so only build.yml is tracked
+      "managerFilePatterns": ["/^\\.github/workflows/build\\.yml$/"],
       "matchStrings": ["'ubuntu-(?<currentValue>\\d+\\.\\d+)(?:-arm)?'"],
       "depNameTemplate": "ubuntu",
       "datasourceTemplate": "github-runners",
