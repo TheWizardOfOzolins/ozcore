@@ -20,7 +20,7 @@ On top of the base image:
 | Packages | `tmux`, `vim`, `tree` (plus `targetcli` on hci) |
 | iSCSI (hci only) | `iscsid` and `target` enabled at boot |
 | Podman | `podman.socket` enabled |
-| Materia | `/usr/bin/materia` plus `materia-update.timer` (runs every 5 min). See [Materia setup](#materia-setup) |
+| Materia | `/usr/bin/materia` and its man pages, plus `materia-update.timer` (runs every 5 min). See [Materia setup](#materia-setup) |
 | Signature policy | The host only accepts updates to this image that are signed with [`cosign.pub`](cosign.pub) |
 | Quieter login | `coreos-container-signing-migration-motd.service` disabled |
 
@@ -79,9 +79,11 @@ Files in `/etc` persist across image updates. They can also be supplied via Buta
 ## Build
 
 - **CI:** [`build.yml`](.github/workflows/build.yml) builds both variants daily (06:30 UTC), on pushes to `main`, and on PRs, each for amd64 and arm64 on native runners. Images from `main` are pushed to GHCR as multi-arch `latest`, `latest.YYYYMMDD` and `YYYYMMDD` tags (plus per-platform `latest-amd64` / `latest-arm64`), then signed with cosign. If any build fails, the multi-arch tags are left untouched for that run.
-- **Dependencies:** [Renovate](.github/renovate.json5) updates GitHub Actions and the Materia version in `build_files/common/30-materia.sh`. Materia bump PRs fail the build until the `MATERIA_SHA256` values are updated to match the new release.
+- **Dependencies:** [Renovate](.github/renovate.json5) updates GitHub Actions, runner images, bootc-image-builder, the base images and the Materia version in `build_files/common/30-materia.sh`. PRs are rebased whenever `main` moves.
+  - **Base images** are pinned by digest, one per variant, in the `Containerfile`. Renovate opens a PR when `:stable` moves and automerges it once the build passes, so every base update is a revertable commit.
+  - **Materia** is downloaded from its GitHub release and verified at build time: `SHA256SUMS` is checked with the maintainer's cosign key ([`build_files/keys/materia.pub`](build_files/keys/materia.pub)), then the tarball is checked against it. No per-version hashes live in the repo, so patch releases automerge; minor releases wait for review since Materia is pre-1.0. If upstream rotates its key, replace `materia.pub`.
 - **Layout:**
-  - `Containerfile` – base image and build entrypoint
+  - `Containerfile` – pinned base images (one per variant) and build entrypoint
   - `build_files/build.sh` – orchestrator: applies the `common` layer, then the `${VARIANT}` layer
   - `build_files/common/*.sh` – build steps for every image (signing policy, packages, Materia)
   - `build_files/hci/*.sh`, `build_files/minimal/*.sh` – build steps for one image only (e.g. iSCSI on hci)
