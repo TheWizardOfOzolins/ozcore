@@ -27,7 +27,7 @@ jobs:
   build_push:
     name: Build and push ${{ matrix.image.name }} (${{ matrix.platform }})
     # Each platform builds natively on its own runner (no QEMU); the manifest job joins them into one multi-arch tag
-    runs-on: ${{ matrix.platform == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+    runs-on: ${{ matrix.platform == 'arm64' && 'ubuntu-26.04-arm' || 'ubuntu-26.04' }}
     strategy:
       fail-fast: false
       matrix:
@@ -191,7 +191,7 @@ jobs:
     needs: build_push
     # These `if` statements are so that pull requests for your custom images do not make it publish any packages under your name without you knowing
     if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     strategy:
       fail-fast: false
       matrix:
