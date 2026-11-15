@@ -8,7 +8,7 @@
   "rebaseWhen": "behind-base-branch",
 
   // Bumps versions annotated with `# renovate: datasource=... depName=...` in build scripts.
-  // Checksums are not updated automatically; the PR build fails until they are.
+  // Downloads are verified against upstream-signed checksums at build time, so no hashes need bumping.
   "customManagers": [
     {
       "customType": "regex",
@@ -30,6 +30,12 @@
       "matchFileNames": ["Containerfile"],
       "matchDepNames": ["ghcr.io/ublue-os/ucore-hci", "ghcr.io/ublue-os/ucore-minimal"],
       "matchUpdateTypes": ["digest"],
+    },
+    {
+      // Materia is pre-1.0 and minors can break config; only patch releases land unattended
+      "automerge": true,
+      "matchDepNames": ["stryan/materia"],
+      "matchUpdateTypes": ["patch"],
     },
     {
       "enabled": false,
