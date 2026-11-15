@@ -6,6 +6,8 @@ FROM scratch AS ctx
 COPY build_files /
 COPY system_files /system_files
 COPY cosign.pub /system_files/common/etc/pki/containers/ucore-nas.pub
+## cosign is only needed at build time, to verify signed upstream release artifacts
+COPY --from=ghcr.io/sigstore/cosign/cosign:v3.1.4@sha256:0f06154836d2de34f887a5c273506d52ca43edaa1d9e53e6510fa78a48f69c2d /ko-app/cosign /tools/cosign
 
 # Base Images
 ## One stage per variant so Renovate can pin and bump each digest independently;
