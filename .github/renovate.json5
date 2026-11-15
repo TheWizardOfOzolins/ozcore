@@ -4,7 +4,8 @@
     "config:best-practices",
   ],
 
-  "rebaseWhen": "never",
+  // Rebase whenever main moves so PR checks always run against the current workflow and Containerfile
+  "rebaseWhen": "behind-base-branch",
 
   // Bumps versions annotated with `# renovate: datasource=... depName=...` in build scripts.
   // Checksums are not updated automatically; the PR build fails until they are.
@@ -22,6 +23,13 @@
     {
       "automerge": true,
       "matchUpdateTypes": ["pin", "pinDigest"]
+    },
+    {
+      // Base images are pinned per variant in the Containerfile; land new :stable digests once the PR build passes
+      "automerge": true,
+      "matchFileNames": ["Containerfile"],
+      "matchDepNames": ["ghcr.io/ublue-os/ucore-hci", "ghcr.io/ublue-os/ucore-minimal"],
+      "matchUpdateTypes": ["digest"],
     },
     {
       "enabled": false,
