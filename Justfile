@@ -1,7 +1,7 @@
 export image_name := env("IMAGE_NAME", "ucore-nas") # output image name, usually same as repo name, change as needed
 export default_tag := env("DEFAULT_TAG", "latest")
 export variant := env("VARIANT", "hci") # hci or minimal
-export bib_image := env("BIB_IMAGE", "ghcr.io/osbuild/bootc-image-builder:v85.0.0")
+export bib_image := env("BIB_IMAGE", "ghcr.io/osbuild/bootc-image-builder:v91.0.0")
 
 alias build-vm := build-qcow2
 alias rebuild-vm := rebuild-qcow2
