@@ -1,6 +1,6 @@
-export image_name := env("IMAGE_NAME", "ucore-nas") # output image name, usually same as repo name, change as needed
-export default_tag := env("DEFAULT_TAG", "latest")
 export variant := env("VARIANT", "hci") # hci or minimal
+export image_name := env("IMAGE_NAME", "ozcore-" + variant) # mirrors the upstream ucore-<variant> it builds on
+export default_tag := env("DEFAULT_TAG", "latest")
 export bib_image := env("BIB_IMAGE", "ghcr.io/osbuild/bootc-image-builder:v91.0.0")
 
 alias build-vm := build-qcow2
@@ -78,7 +78,7 @@ sudoif command *args:
 # The variant (hci or minimal) comes from $VARIANT.
 #
 # Example usage:
-#   VARIANT=minimal just build ucore-nas-minimal
+#   VARIANT=minimal just build    # builds ozcore-minimal
 #
 
 # Build the image using the specified parameters

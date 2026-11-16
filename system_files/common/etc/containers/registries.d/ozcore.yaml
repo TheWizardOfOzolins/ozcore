@@ -1,0 +1,5 @@
+docker:
+  ghcr.io/thewizardofozolins/ozcore-hci:
+    use-sigstore-attachments: true
+  ghcr.io/thewizardofozolins/ozcore-minimal:
+    use-sigstore-attachments: true
