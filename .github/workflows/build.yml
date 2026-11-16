@@ -35,10 +35,10 @@ jobs:
         image:
           # Each entry builds Containerfile with VARIANT=<variant>: build_files/common + build_files/<variant>
           # Keep the names in sync with the manifest job's matrix
-          - name: ucore-nas
+          - name: ozcore-hci
             variant: hci
             description: "uCore HCI NAS image with iSCSI target and Materia"
-          - name: ucore-nas-minimal
+          - name: ozcore-minimal
             variant: minimal
             description: "Minimal uCore NAS image with Materia"
 
@@ -156,7 +156,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        image_name: [ucore-nas, ucore-nas-minimal]
+        image_name: [ozcore-hci, ozcore-minimal]
 
     permissions:
       contents: read
@@ -176,7 +176,7 @@ jobs:
       - name: Download digests
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
-          pattern: digest-*-${{ env.IMAGE_NAME }}  # platform first: a trailing wildcard on ucore-nas would also match ucore-nas-minimal
+          pattern: digest-*-${{ env.IMAGE_NAME }}  # platform first, so an image name that prefixes another (e.g. ozcore / ozcore-minimal) can't match both
           path: ${{ runner.temp }}/digests
           merge-multiple: true
 
