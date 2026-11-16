@@ -276,7 +276,7 @@ jobs:
           output-file: ${{ runner.temp }}/sbom.spdx.json
           upload-artifact: false
           # renovate: datasource=github-releases depName=anchore/syft
-          syft-version: v1.55.0
+          syft-version: v1.57.1
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4
