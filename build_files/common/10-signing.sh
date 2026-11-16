@@ -8,7 +8,7 @@ set -ouex pipefail
 
 POLICY_TMP=$(mktemp)
 cp /etc/containers/policy.json "$POLICY_TMP"
-for repo in ucore-nas ucore-nas-minimal ozcore ozcore-minimal; do
+for repo in ucore-nas ucore-nas-minimal ozcore-hci ozcore-minimal; do
   jq --arg repo "ghcr.io/thewizardofozolins/${repo}" '.transports.docker[$repo] = [{
         "type": "sigstoreSigned",
         "keyPath": "/etc/pki/containers/ucore-nas.pub",
