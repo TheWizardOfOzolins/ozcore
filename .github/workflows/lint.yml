@@ -27,7 +27,7 @@ jobs:
 
       - name: Run shellcheck
         # shellcheck is preinstalled on GitHub's Ubuntu runners
-        run: shellcheck --version && shellcheck build_files/*.sh build_files/*/*.sh
+        run: shellcheck --version && shellcheck build_files/*.sh build_files/*/*.sh tests/*.sh
 
   justfile:
     name: just --fmt
