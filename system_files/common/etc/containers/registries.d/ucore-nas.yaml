@@ -3,3 +3,8 @@ docker:
     use-sigstore-attachments: true
   ghcr.io/thewizardofozolins/ucore-nas-minimal:
     use-sigstore-attachments: true
+  # Upcoming name for these images, trusted ahead of the rename (see 10-signing.sh)
+  ghcr.io/thewizardofozolins/ozcore:
+    use-sigstore-attachments: true
+  ghcr.io/thewizardofozolins/ozcore-minimal:
+    use-sigstore-attachments: true
