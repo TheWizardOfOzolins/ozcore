@@ -25,8 +25,11 @@ check() {
 }
 
 ### Signature policy: hosts must keep trusting updates to this image
+# $r in these filters is a jq variable (--arg), so the single quotes are intended
+# shellcheck disable=SC2016
 check "policy.json requires a sigstore signature for ${REPO}" \
   jq -e --arg r "$REPO" '.transports.docker[$r][0].type == "sigstoreSigned"' /etc/containers/policy.json
+# shellcheck disable=SC2016
 key=$(jq -r --arg r "$REPO" '.transports.docker[$r][0].keyPath // empty' /etc/containers/policy.json)
 check "policy key exists (${key:-unset})" test -s "${key:-/nonexistent}"
 check "registries.d enables sigstore attachments for ${REPO}" \
