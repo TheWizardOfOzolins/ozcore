@@ -157,7 +157,8 @@ jobs:
           name: digest-${{ matrix.platform }}-${{ env.IMAGE_NAME }}
           path: ${{ runner.temp }}/digests/*
           if-no-files-found: error
-          retention-days: 1
+          # Long enough to re-run the sbom job for a past build, which needs these digests
+          retention-days: 7
 
   manifest:
     name: Publish and sign ${{ matrix.image_name }} manifest
@@ -308,6 +309,19 @@ jobs:
           # renovate: datasource=github-releases depName=anchore/syft
           syft-version: v1.57.2
 
+      - name: Report SBOM size
+        run: |
+          echo "SBOM: $(du -h "${RUNNER_TEMP}/sbom.spdx.json" | cut -f1), $(jq '.packages | length' "${RUNNER_TEMP}/sbom.spdx.json") packages"
+
+      # Before attesting, so the SBOM is kept even if attaching it fails
+      - name: Upload SBOM
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: sbom-${{ env.IMAGE_NAME }}-${{ matrix.platform }}
+          path: ${{ runner.temp }}/sbom.spdx.json
+          if-no-files-found: error
+          retention-days: 90
+
       - name: Login to GitHub Container Registry
         uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4
         with:
@@ -329,11 +343,3 @@ jobs:
         env:
           COSIGN_EXPERIMENTAL: false
           COSIGN_PRIVATE_KEY: ${{ secrets.SIGNING_SECRET }}
-
-      - name: Upload SBOM
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
-        with:
-          name: sbom-${{ env.IMAGE_NAME }}-${{ matrix.platform }}
-          path: ${{ runner.temp }}/sbom.spdx.json
-          if-no-files-found: error
-          retention-days: 90
