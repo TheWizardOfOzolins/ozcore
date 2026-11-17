@@ -152,4 +152,4 @@ cosign verify-attestation --key cosign.pub --type spdxjson "${IMAGE}@${DIGEST}" 
   | jq -r '.payload' | base64 -d | jq '.predicate' > sbom.spdx.json
 ```
 
-The `sbom` job runs after images are published and signed, so if it fails the release still goes out; re-run the job to attach the missing SBOMs.
+The `sbom` job runs after images are published and signed, so if it fails the release still goes out. Re-run the job within 7 days (while the build's digest artifacts are kept) to attach the missing SBOMs; the SBOM itself is uploaded as an artifact before attaching, so it's available even if attaching fails.
