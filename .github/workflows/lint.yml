@@ -54,3 +54,23 @@ jobs:
         uses: docker://rhysd/actionlint:1.7.12@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667
         with:
           args: -color
+
+  syft-config:
+    name: syft config
+    # The sbom job only runs on main, so check .github/syft.yaml here: syft validates its config
+    # before scanning, and a scan of a small directory is enough to trigger that
+    runs-on: ubuntu-26.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Install Syft
+        id: syft
+        uses: anchore/sbom-action/download-syft@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
+        with:
+          # Keep in step with build.yml's sbom job (Renovate bumps both)
+          # renovate: datasource=github-releases depName=anchore/syft
+          syft-version: v1.57.2
+
+      - name: Validate Syft config
+        run: '"${{ steps.syft.outputs.cmd }}" scan dir:tests -c .github/syft.yaml -o spdx-json > /dev/null'
