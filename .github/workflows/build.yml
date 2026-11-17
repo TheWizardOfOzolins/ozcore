@@ -109,6 +109,18 @@ jobs:
             VARIANT=${{ matrix.image.variant }}
           oci: false
 
+      # Runs on PRs too, so a broken image fails before merge, not after it's published
+      - name: Smoke test image
+        env:
+          IMAGE_REF: ${{ steps.build_image.outputs.image-with-tag }}
+          VARIANT: ${{ matrix.image.variant }}
+        run: |
+          MATERIA_VERSION=$(sed -n 's/^MATERIA_VERSION=//p' build_files/common/30-materia.sh)
+          podman run --rm --network=none \
+            -v "${PWD}/tests:/tests:ro,Z" \
+            --entrypoint /bin/bash \
+            "${IMAGE_REF}" /tests/smoke.sh "${IMAGE_NAME}" "${VARIANT}" "${MATERIA_VERSION}"
+
       # Only main publishes; PR builds stop after building the image
       - name: Login to GitHub Container Registry
         uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4
@@ -230,6 +242,24 @@ jobs:
         env:
           COSIGN_EXPERIMENTAL: false
           COSIGN_PRIVATE_KEY: ${{ secrets.SIGNING_SECRET }}
+
+      - name: Checkout public key
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          sparse-checkout: cosign.pub
+          sparse-checkout-cone-mode: false
+
+      # Hosts silently stop updating if they can't verify a signature, so check it the way they need it:
+      # valid against cosign.pub, and stored as a legacy .sig tag (podman/bootc can't read the new bundle format)
+      - name: Verify signatures
+        run: |
+          IMAGE_FULL="${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}"
+          for digest in ${{ steps.push.outputs.digest }} $(cat "${RUNNER_TEMP}"/digests/*); do
+            cosign verify --key cosign.pub "${IMAGE_FULL}@${digest}" >/dev/null
+            sig_tag=$(cosign triangulate --type signature "${IMAGE_FULL}@${digest}")
+            skopeo inspect --raw "docker://${sig_tag}" >/dev/null
+            echo "verified ${IMAGE_FULL}@${digest} (${sig_tag##*:})"
+          done
 
   sbom:
     name: SBOM for ${{ matrix.image_name }} (${{ matrix.platform }})
