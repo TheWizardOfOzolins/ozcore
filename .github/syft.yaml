@@ -1,0 +1,17 @@
+# Syft config for the image SBOMs (build.yml's sbom job).
+# Defaults produced ~55 MB SBOMs, mostly noise; these settings keep every
+# RPM, Go module and Python package while dropping:
+
+linux-kernel:
+  # ~4,800 versionless entries, one per kernel module (.ko); the kernel RPM already covers them
+  catalog-modules: false
+
+file:
+  metadata:
+    # a files entry for every file owned by a package (~49k), ~half the document
+    selection: none
+
+relationships:
+  # package -> file CONTAINS relationships for the files above
+  package-file-ownership: false
+  package-file-ownership-overlap: false
