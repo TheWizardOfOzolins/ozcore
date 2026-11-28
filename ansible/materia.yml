@@ -1,0 +1,132 @@
+---
+# Provision Materia's per-host config and secrets on ozcore hosts.
+# The image ships the binary and materia-update.timer; this writes what it needs in /etc/materia.
+#
+# Usage:
+#   ansible-playbook -i inventory.yml materia.yml --ask-vault-pass
+#
+# Variables (see inventory.example.yml):
+#   materia_repo_url         required  SSH URL of the Materia repo (ssh://git@host:port/user/repo.git or git@host:user/repo.git)
+#   materia_ssh_private_key  required  Deploy key contents (keep it in Ansible Vault)
+#   materia_branch           optional  Branch to deploy, default "main"
+#   materia_known_hosts      optional  known_hosts contents to pin; if unset, the host key is fetched with ssh-keyscan from the target
+#   materia_git_host/port    optional  Host and port to scan, default parsed from materia_repo_url
+#   materia_age_key          optional  age identity; only when set is key.txt written and the [age] engine enabled
+#   materia_age_base_dir     optional  Directory of age vaults in the repo, default "attributes"
+#   materia_config_extra     optional  Raw TOML appended to config.toml (e.g. a [file] or [sops] table)
+#   materia_run_now          optional  Run materia-update.service when anything changed, default true
+
+- name: Set up Materia
+  hosts: ozcore
+  become: true
+  gather_facts: false
+
+  vars:
+    _materia_dir: /etc/materia
+    # ssh://[user@]host[:port]/path, or scp-style [user@]host:path (always port 22)
+    _materia_git_host: >-
+      {{ materia_git_host | default(
+           (materia_repo_url | urlsplit('hostname')) if materia_repo_url is match('ssh://')
+           else (materia_repo_url | regex_replace('^(?:[^@]+@)?([^:/]+):.*$', '\1'))) }}
+    _materia_git_port: >-
+      {{ materia_git_port | default(
+           ((materia_repo_url | urlsplit('port')) if materia_repo_url is match('ssh://') else none) or 22) }}
+
+  tasks:
+    - name: Check required variables
+      ansible.builtin.assert:
+        that:
+          - materia_repo_url is defined and materia_repo_url | length > 0
+          - materia_ssh_private_key is defined and materia_ssh_private_key | length > 0
+        fail_msg: Set materia_repo_url and materia_ssh_private_key (see inventory.example.yml)
+        quiet: true
+
+    - name: Check the host has Materia
+      ansible.builtin.stat:
+        path: /usr/bin/materia
+      register: _materia_bin
+
+    - name: Fail if Materia is missing
+      ansible.builtin.fail:
+        msg: /usr/bin/materia not found. Is this host running an ozcore image?
+      when: not _materia_bin.stat.exists
+
+    # Images built before key.txt became optional skip the service unless it exists
+    - name: Read materia-update.service
+      ansible.builtin.slurp:
+        src: /usr/lib/systemd/system/materia-update.service
+      register: _materia_unit
+
+    - name: Fail if this image still requires key.txt
+      ansible.builtin.fail:
+        msg: >-
+          This host's image still requires /etc/materia/key.txt, so Materia would never run without an age key.
+          Update the host to a newer ozcore image (bootc upgrade, then reboot), or set materia_age_key.
+      when:
+        - materia_age_key is not defined
+        - "'ConditionPathExists=/etc/materia/key.txt' in (_materia_unit.content | b64decode)"
+
+    - name: Create /etc/materia
+      ansible.builtin.file:
+        path: "{{ _materia_dir }}"
+        state: directory
+        owner: root
+        group: root
+        mode: "0700"
+
+    - name: Write deploy key
+      ansible.builtin.copy:
+        content: "{{ materia_ssh_private_key | trim }}\n"
+        dest: "{{ _materia_dir }}/materia_key"
+        owner: root
+        group: root
+        mode: "0600"
+      no_log: true
+      notify: Run Materia
+
+    - name: Scan Git server host key
+      ansible.builtin.command: ssh-keyscan -T 10 -p {{ _materia_git_port }} {{ _materia_git_host }}
+      register: _materia_keyscan
+      changed_when: false
+      failed_when: _materia_keyscan.rc != 0 or _materia_keyscan.stdout | length == 0
+      when: materia_known_hosts is not defined
+
+    - name: Write known_hosts
+      ansible.builtin.copy:
+        # Sorted so a rescan with keys in a different order doesn't count as a change
+        content: >-
+          {{ (materia_known_hosts if materia_known_hosts is defined
+              else (_materia_keyscan.stdout_lines | reject('match', '^#') | sort | join('\n')))
+             | trim }}{{ '\n' }}
+        dest: "{{ _materia_dir }}/known_hosts"
+        owner: root
+        group: root
+        mode: "0644"
+      notify: Run Materia
+
+    - name: Write age key
+      ansible.builtin.copy:
+        content: "{{ materia_age_key | trim }}\n"
+        dest: "{{ _materia_dir }}/key.txt"
+        owner: root
+        group: root
+        mode: "0600"
+      no_log: true
+      when: materia_age_key is defined
+      notify: Run Materia
+
+    - name: Write config.toml
+      ansible.builtin.template:
+        src: config.toml.j2
+        dest: "{{ _materia_dir }}/config.toml"
+        owner: root
+        group: root
+        mode: "0600"
+      notify: Run Materia
+
+  handlers:
+    - name: Run Materia
+      ansible.builtin.systemd_service:
+        name: materia-update.service
+        state: started
+      when: materia_run_now | default(true) | bool

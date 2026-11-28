@@ -2,3 +2,6 @@ cosign.key
 _build_*
 output
 _build-*/**
+
+# Per-host Ansible inventory (holds vaulted secrets)
+ansible/inventory.yml
