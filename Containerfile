@@ -12,7 +12,7 @@ COPY --from=ghcr.io/sigstore/cosign/cosign:v3.1.4@sha256:0f06154836d2de34f887a5c
 # Base Images
 ## One stage per variant so Renovate can pin and bump each digest independently;
 ## only the stage selected by VARIANT is pulled and built
-FROM ghcr.io/ublue-os/ucore-hci:stable@sha256:daea6fce6bdfafaf9a4c47ce005e15b0cd543f907d1d554352d2124a824b829e AS base-hci
+FROM ghcr.io/ublue-os/ucore-hci:stable@sha256:d18b4becf13288944b73fb08838e03054a9d6e9d8dc691ddb15f17e2257b3150 AS base-hci
 FROM ghcr.io/ublue-os/ucore-minimal:stable@sha256:5543594198b490c91043591abc02023a3eb8e3ff22c7e81d974f4213f9c64025 AS base-minimal
 
 FROM base-${VARIANT}
