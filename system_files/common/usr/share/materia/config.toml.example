@@ -7,6 +7,8 @@ branch      = "main"
 private_key = "/etc/materia/materia_key"
 knownhosts  = "/etc/materia/known_hosts"
 
-[age]
-keyfile  = "/etc/materia/key.txt"
-base_dir = "attributes"
+# Optional: only if the repo stores attributes in age-encrypted vaults.
+# Uncomment and install the age identity as /etc/materia/key.txt (mode 0600)
+# [age]
+# keyfile  = "/etc/materia/key.txt"
+# base_dir = "attributes"

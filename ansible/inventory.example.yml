@@ -1,0 +1,27 @@
+---
+# Copy to inventory.yml (git-ignored) and fill in. Keep secrets in Ansible Vault, e.g.:
+#   ansible-vault encrypt_string --stdin-name materia_ssh_private_key < ~/.ssh/materia_deploy
+ozcore:
+  hosts:
+    nas.example.lan:
+      ansible_user: core
+  vars:
+    materia_repo_url: ssh://git@forgejo.example.lan:2222/me/materia.git
+    materia_branch: main
+
+    materia_ssh_private_key: !vault |
+      $ANSIBLE_VAULT;1.1;AES256
+      ...
+
+    # Optional: pin the Git server's host key instead of trusting ssh-keyscan on first run
+    # materia_known_hosts: "[forgejo.example.lan]:2222 ssh-ed25519 AAAA..."
+
+    # Optional: only if the repo stores attributes in age-encrypted vaults
+    # materia_age_key: !vault |
+    #   $ANSIBLE_VAULT;1.1;AES256
+    #   ...
+
+    # Optional: anything else for config.toml, e.g. plain (unencrypted) attribute files
+    # materia_config_extra: |
+    #   [file]
+    #   base_dir = "attributes"

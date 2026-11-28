@@ -39,6 +39,8 @@ check "registries.d enables sigstore attachments for ${REPO}" \
 check "materia runs and reports ${MATERIA_VERSION}" \
   bash -c "materia version | grep -qF '${MATERIA_VERSION#v}'"
 check "materia-update.timer is enabled" systemctl is-enabled materia-update.timer
+# ansible/materia.yml provisions Materia, and Ansible modules need Python on the host (uCore gets it via tuned)
+check "python3 is installed" command -v python3
 
 ### Shared services and packages
 check "podman.socket is enabled" systemctl is-enabled podman.socket

@@ -1,0 +1,19 @@
+# Managed by Ansible (ansible/materia.yml in ozcore); local edits will be overwritten
+[source]
+kind = "git"
+url  = {{ materia_repo_url | to_json }}
+
+[git]
+branch      = {{ materia_branch | default('main') | to_json }}
+private_key = "{{ _materia_dir }}/materia_key"
+knownhosts  = "{{ _materia_dir }}/known_hosts"
+{% if materia_age_key is defined %}
+
+[age]
+keyfile  = "{{ _materia_dir }}/key.txt"
+base_dir = {{ materia_age_base_dir | default('attributes') | to_json }}
+{% endif %}
+{% if materia_config_extra is defined %}
+
+{{ materia_config_extra | trim }}
+{% endif %}

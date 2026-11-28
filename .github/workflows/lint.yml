@@ -55,6 +55,26 @@ jobs:
         with:
           args: -color
 
+  ansible-lint:
+    name: ansible-lint
+    runs-on: ubuntu-26.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Set up Python
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.13"
+
+      - name: Install ansible-lint
+        # Versions are pinned in requirements-lint.txt so Renovate bumps them
+        run: pip install -r ansible/requirements-lint.txt
+
+      - name: Run ansible-lint
+        working-directory: ansible
+        run: ansible-lint materia.yml
+
   syft-config:
     name: syft config
     # The sbom job only runs on main, so check .github/syft.yaml here: syft validates its config
