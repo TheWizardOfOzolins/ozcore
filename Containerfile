@@ -7,7 +7,7 @@ COPY build_files /
 COPY system_files /system_files
 COPY cosign.pub /system_files/common/etc/pki/containers/ozcore.pub
 ## cosign is only needed at build time, to verify signed upstream release artifacts
-COPY --from=ghcr.io/sigstore/cosign/cosign:v3.1.4@sha256:0f06154836d2de34f887a5c273506d52ca43edaa1d9e53e6510fa78a48f69c2d /ko-app/cosign /tools/cosign
+COPY --from=ghcr.io/sigstore/cosign/cosign:v3.1.6@sha256:7d08ec40d6f6fd9ced81a498c367ee6d4dd90d73218f58a791f78661bdbef769 /ko-app/cosign /tools/cosign
 
 # Base Images
 ## One stage per variant so Renovate can pin and bump each digest independently;
